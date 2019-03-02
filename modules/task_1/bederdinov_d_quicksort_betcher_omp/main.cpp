@@ -1,15 +1,14 @@
 // Copyright 2019 Bederdinov Daniil
-#define len 80
-#include <stdlib.h>
+#include <omp.h>
 #include <iostream>
 #include <ctime>
 #include <cmath>
-#include <omp.h>
+
+const int len = 80;
 
 void CreateArray(int arr[], int length) {
     srand((unsigned int)time(NULL));
-    for (int i = 0; i < length; i++)
-    {
+    for (int i = 0; i < length; i++) {
         arr[i] = std::rand() % len;
     }
 }
