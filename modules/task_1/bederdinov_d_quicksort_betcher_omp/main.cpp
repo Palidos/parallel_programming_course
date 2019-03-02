@@ -1,15 +1,15 @@
 // Copyright 2019 Bederdinov Daniil
+#define kLength 80
 #include <omp.h>
 #include <iostream>
 #include <ctime>
 #include <cmath>
 
-const int len = 80;
 
 void CreateArray(int arr[], int length) {
     srand((unsigned int)time(NULL));
     for (int i = 0; i < length; i++) {
-        arr[i] = std::rand() % len;
+        arr[i] = std::rand() % kLength;
     }
 }
 
@@ -40,19 +40,19 @@ void QuickSort(int *arr, int size) {
 }
 
 int main(int argc, char *argv[]) {
-    int array[len];
-    CreateArray(array, len);
+    int array[kLength];
+    CreateArray(array, kLength);
     std::cout << std::endl;
     std::cout << "array before sort:" << std::endl;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < kLength; i++) {
         std::cout << array[i] << " ";
     }
 
     std::cout << std::endl;
 
-    QuickSort(array, len);
+    QuickSort(array, kLength);
     std::cout << "array after sort:" << std::endl;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < kLength; i++) {
         std::cout << array[i] << " ";
     }
     std::cout << std::endl;
