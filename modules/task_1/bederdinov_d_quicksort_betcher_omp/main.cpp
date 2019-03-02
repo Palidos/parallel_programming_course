@@ -44,24 +44,25 @@ void QuickSort(int *arr, int size)
         QuickSort(&arr[i], size - i);
 }
 
-
 int main(int argc, char *argv[])
 {
     int array[len];
     CreateArray(array, len);
-    std::cout<<std::endl;
-    std::cout<< "array before sort:"<< std::endl;
-    for (int i = 0; i < len; i++) {
+    std::cout << std::endl;
+    std::cout << "array before sort:" << std::endl;
+    for (int i = 0; i < len; i++)
+    {
         std::cout << array[i] << " ";
     }
 
-    std::cout<<std::endl;
+    std::cout << std::endl;
 
     QuickSort(array, len);
-    std::cout<< "array after sort:"<< std::endl;
-    for (int i = 0; i < len; i++) {
+    std::cout << "array after sort:" << std::endl;
+    for (int i = 0; i < len; i++)
+    {
         std::cout << array[i] << " ";
     }
-    std::cout<<std::endl;
+    std::cout << std::endl;
     return 0;
 }
