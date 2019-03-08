@@ -142,14 +142,16 @@ int main(int argc, char *argv[]) {
     int *chunk = new int[threads];  // chunk - массив, содержащий размеры частей массива
 #pragma omp parallel shared(arr, step, shift, chunk, tempArray) num_threads(threads)
     {
-        int tid, thread_index;  // tid - переменная для хранения ID текущего потока, thread_index - определяет необходимый сдвиг для получения парного потока (на шаге 1 = 1, на шаге 2 = 2 и т.д.)
+        int tid, thread_index;  /* tid - переменная для хранения ID текущего потока,
+                                thread_index - определяет необходимый сдвиг для получения
+                                парного потока (на шаге 1 = 1, на шаге 2 = 2 и т.д.) */
         tid = omp_get_thread_num();
 
         /* Распределение частей исходного массива по потокам и сортировка данных частей */
 
         shift[tid] = tid * (size / threads);
-        chunk[tid] = (tid == threads - 1) ? (size / threads) + (size % threads) 
-        : size / threads;
+        chunk[tid] = (tid == threads - 1) ? (size / threads) +
+        (size % threads) : size / threads;
         quickSort(arr + shift[tid], chunk[tid]);
 #pragma omp barrier  // Ожидаем, пока все потоки отсортируют свою часть массива
 
