@@ -8,17 +8,17 @@
 
 void shuffle(int *arr, int len) {
     srand((unsigned int)time(NULL));
-        int i = len, j, temp;
-        while (--i > 0) {
-            j = std::rand() % kLength;
-            temp = arr[j];
-            arr[j] = arr[i];
-            arr[i] = temp;
-        }
+    int i = len, j, temp;
+    while (--i > 0) {
+        j = std::rand() % kLength;
+        temp = arr[j];
+        arr[j] = arr[i];
+        arr[i] = temp;
+    }
 }
 
-void fillArray (int *arr, int len) {
-    for(int i = 0; i < len; i++) {
+void fillArray(int *arr, int len) {
+    for (int i = 0; i < len; i++) {
         arr[i] = i;
     }
 }
@@ -74,7 +74,7 @@ void mergeAndSort(const std::vector<int> vec1, const std::vector<int> vec2, int 
         j++;
     }
 
-    i = 1; // Первый элемент проверять не нужно
+    i = 1;  // Первый элемент проверять не нужно
     while (i < size1 + size2 - 1) {
         if (write_to[i] > write_to[i + 1]) {
             j = write_to[i];
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     //     return 1;
     // }
 
-    int size = kLength, threads = 4; // atoi(argv[1]);
+    int size = kLength, threads = 4;  // atoi(argv[1]);
     int arr[kLength];
     fillArray(arr, kLength);
     shuffle(arr, kLength);
@@ -135,13 +135,13 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
 
     double time = omp_get_wtime();
-    int step; // Переменная для хранения шага (step = 2^(N-1))
+    int step;  // Переменная для хранения шага (step = 2^(N-1))
     std::vector<int> *tempArray = new std::vector<int>[threads];
-    int *shift = new int[threads]; // shift - массив сдвигов
-    int *chunk = new int[threads]; // chunk - массив, содержащий размеры частей массива
+    int *shift = new int[threads];  // shift - массив сдвигов
+    int *chunk = new int[threads];  // chunk - массив, содержащий размеры частей массива
 #pragma omp parallel shared(arr, step, shift, chunk, tempArray) num_threads(threads)
     {
-        int tid, thread_index; // tid - переменная для хранения ID текущего потока, thread_index - определяет необходимый сдвиг для получения парного потока (на шаге 1 = 1, на шаге 2 = 2 и т.д.)
+        int tid, thread_index;  // tid - переменная для хранения ID текущего потока, thread_index - определяет необходимый сдвиг для получения парного потока (на шаге 1 = 1, на шаге 2 = 2 и т.д.)
         tid = omp_get_thread_num();
 
         /* Распределение частей исходного массива по потокам и сортировка данных частей */
@@ -149,11 +149,11 @@ int main(int argc, char *argv[]) {
         shift[tid] = tid * (size / threads);
         chunk[tid] = (tid == threads - 1) ? (size / threads) + (size % threads) : size / threads;
         quickSort(arr + shift[tid], chunk[tid]);
-#pragma omp barrier // Ожидаем, пока все потоки отсортируют свою часть массива
+#pragma omp barrier  // Ожидаем, пока все потоки отсортируют свою часть массива
 
         step = 1;
         while (step < threads) {
-/* На каждом шаге выбираем четные и нечетные элементы из парных потоков, записываем в tempArray */
+            /* На каждом шаге выбираем четные и нечетные элементы из парных потоков, записываем в tempArray */
             thread_index = (int)pow(2, step - 1);
 
             if (tid % (thread_index * 2) == 0) {
@@ -161,8 +161,8 @@ int main(int argc, char *argv[]) {
             } else if (tid % thread_index == 0) {
                 selectElements(ODD, arr + shift[tid], chunk[tid], arr + shift[tid - thread_index], chunk[tid - thread_index], tempArray[tid]);
             }
-#pragma omp barrier // Ожидаем выполнения данной части всеми потоками
-/* Производим слияние и сортировку tempArray в парных потоках */
+#pragma omp barrier  // Ожидаем выполнения данной части всеми потоками
+                     /* Производим слияние и сортировку tempArray в парных потоках */
             if (tid % (thread_index * 2) == 0) {
                 mergeAndSort(tempArray[tid], tempArray[tid + thread_index], arr + shift[tid]);
                 chunk[tid] += chunk[tid + thread_index];
@@ -173,9 +173,9 @@ int main(int argc, char *argv[]) {
             }
 #pragma omp single
             {
-                step *= 2; // Переходим на следующий шаг первым освободившимся потоком
+                step *= 2;  // Переходим на следующий шаг первым освободившимся потоком
             }
-#pragma omp barrier // Ждем пока слияние и сортировку выполнят все потоки
+#pragma omp barrier  // Ждем пока слияние и сортировку выполнят все потоки
         }
     }
     delete[] tempArray;
