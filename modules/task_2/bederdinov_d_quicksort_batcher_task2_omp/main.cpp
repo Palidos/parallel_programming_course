@@ -85,32 +85,33 @@ void mergeAndSort(const std::vector<int> vec1, const std::vector<int> vec2, int 
     }
 }
 
-void selectElements(elemType type, const int *arr1, int size1, const int *arr2, int size2, std::vector<int> &result) {
+void selectElements(elemType type, const int *arr1, int size1, const int *arr2, int size2, std::vector<int> *result) {
     int i, j;
     if (type == EVEN)
         i = 0, j = 0;
     else
         i = 1, j = 1;
-    result.reserve(size1 + size2);
+    result->reserve(size1 + size2);
     while (i < size1 && j < size2) {
         if (arr1[i] <= arr2[j]) {
-            result.push_back(arr1[i]);
+            result->push_back(arr1[i]);
             i += 2;
         } else {
-            result.push_back(arr2[j]);
+            result->push_back(arr2[j]);
             j += 2;
         }
     }
-    if (i >= size1)
+    if (i >= size1) {
         while (j < size2) {
-            result.push_back(arr2[j]);
+            result->push_back(arr2[j]);
             j += 2;
         }
-    else
+    } else {
         while (i < size1) {
-            result.push_back(arr1[i]);
+            result->push_back(arr1[i]);
             i += 2;
         }
+    }
 }
 
 void printArray(int *array, const int size) {
@@ -147,19 +148,22 @@ int main(int argc, char *argv[]) {
         /* Распределение частей исходного массива по потокам и сортировка данных частей */
 
         shift[tid] = tid * (size / threads);
-        chunk[tid] = (tid == threads - 1) ? (size / threads) + (size % threads) : size / threads;
+        chunk[tid] = (tid == threads - 1) ? (size / threads) + (size % threads) 
+        : size / threads;
         quickSort(arr + shift[tid], chunk[tid]);
 #pragma omp barrier  // Ожидаем, пока все потоки отсортируют свою часть массива
 
         step = 1;
         while (step < threads) {
             /* На каждом шаге выбираем четные и нечетные элементы из парных потоков, записываем в tempArray */
-            thread_index = (int)pow(2, step - 1);
+            thread_index = static_cast<int>(pow(2, step - 1));
 
             if (tid % (thread_index * 2) == 0) {
-                selectElements(EVEN, arr + shift[tid], chunk[tid], arr + shift[tid + thread_index], chunk[tid + thread_index], tempArray[tid]);
+                selectElements(EVEN, arr + shift[tid], chunk[tid], arr + shift[tid +
+                thread_index], chunk[tid + thread_index], &tempArray[tid]);
             } else if (tid % thread_index == 0) {
-                selectElements(ODD, arr + shift[tid], chunk[tid], arr + shift[tid - thread_index], chunk[tid - thread_index], tempArray[tid]);
+                selectElements(ODD, arr + shift[tid], chunk[tid], arr +
+                shift[tid - thread_index], chunk[tid - thread_index], &tempArray[tid]);
             }
 #pragma omp barrier  // Ожидаем выполнения данной части всеми потоками
                      /* Производим слияние и сортировку tempArray в парных потоках */
