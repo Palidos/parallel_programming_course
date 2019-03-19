@@ -123,7 +123,7 @@ void printArray(int *array, const int size) {
 
 bool check(int *A, int *B, int size) {
     for (int i = 0; i < size; ++i)
-        if (A[i] == B[i]) {
+        if (A[i] != B[i]) {
             return false;
         }
     return true;
@@ -219,6 +219,8 @@ int main(int argc, char *argv[]) {
     if (kLength <= 100) {
         printArray(array, kLength);
     }
+
+    qsort(copy, kLength, sizeof(int), (int (*)(const void *, const void *))compare);
 
     if (check(copy, array, kLength))
         std::cout << "Arrays are equal" << std::endl;
