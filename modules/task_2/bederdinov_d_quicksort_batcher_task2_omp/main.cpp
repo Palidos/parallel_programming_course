@@ -1,25 +1,25 @@
 // Copyright 2019 Bederdinov Daniil
-#define kLength 80
+#define kLength 100
 #include <omp.h>
 #include <cmath>
 #include <ctime>
 #include <iostream>
 #include <vector>
 
-void shuffle(int *arr, int len) {
+void shuffle(int *array, int len) {
     srand((unsigned int)time(NULL));
     int i = len, j, temp;
     while (--i > 0) {
         j = std::rand() % kLength;
-        temp = arr[j];
-        arr[j] = arr[i];
-        arr[i] = temp;
+        temp = array[j];
+        array[j] = array[i];
+        array[i] = temp;
     }
 }
 
-void fillArray(int *arr, int len) {
+void fillArray(int *array, int len) {
     for (int i = 0; i < len; i++) {
-        arr[i] = i;
+        array[i] = i;
     }
 }
 
@@ -28,20 +28,20 @@ enum elemType {
     ODD
 };
 
-void quickSort(int *arr, int size) {
+void quickSort(int *array, int size) {
     int i = 0, j = size - 1;
-    int pivot = arr[size / 2];
+    int pivot = array[size / 2];
 
     do {
-        while (arr[i] < pivot)
+        while (array[i] < pivot)
             i++;
-        while (arr[j] > pivot)
+        while (array[j] > pivot)
             j--;
 
         if (i <= j) {
-            int tmp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = tmp;
+            int tmp = array[i];
+            array[i] = array[j];
+            array[j] = tmp;
 
             i++;
             j--;
@@ -49,9 +49,9 @@ void quickSort(int *arr, int size) {
     } while (i <= j);
 
     if (j > 0)
-        quickSort(arr, j + 1);
+        quickSort(array, j + 1);
     if (i < size)
-        quickSort(&arr[i], size - i);
+        quickSort(&array[i], size - i);
 }
 
 void mergeAndSort(const std::vector<int> vec1, const std::vector<int> vec2, int *write_to) {
@@ -121,38 +121,64 @@ void printArray(int *array, const int size) {
     std::cout << std::endl;
 }
 
+bool check(int *A, int *B, int size) {
+    for (int i = 0; i < size; ++i)
+        if (A[i] == B[i]) {
+            return false;
+        }
+    return true;
+}
+
+int compare(const int *i, const int *j) {
+    return *i - *j;
+}
+
 int main(int argc, char *argv[]) {
+    int threads;
     // if (argc != 2) {
     //     std::cout << "Use ./main [threads]" << std::endl;
     //     return 1;
     // }
 
-    int size = kLength, threads = 4;  // atoi(argv[1]);
-    int arr[kLength];
-    fillArray(arr, kLength);
-    shuffle(arr, kLength);
-    std::cout << "Unsorted array:" << std::endl;
-    printArray(arr, kLength);
-    std::cout << std::endl;
+    if (argc == 2) {
+        threads = atoi(argv[1]);
+    } else {
+        threads = 4;
+    }
+
+    int size = kLength;
+    int *array = new int[kLength];
+    int *copy = new int[kLength];
+    fillArray(array, kLength);
+    shuffle(array, kLength);
+
+    for (int i = 0; i < kLength; i++)
+        copy[i] = array[i];
+
+    if (kLength <= 100) {
+        std::cout << "Unsorted array:" << std::endl;
+        printArray(array, kLength);
+        std::cout << std::endl;
+    }
 
     double time = omp_get_wtime();
     int step;  // Переменная для хранения шага (step = 2^(N-1))
     std::vector<int> *tempArray = new std::vector<int>[threads];
     int *shift = new int[threads];  // shift - массив сдвигов
     int *chunk = new int[threads];  // chunk - массив, содержащий размеры частей массива
-#pragma omp parallel shared(arr, step, shift, chunk, tempArray) num_threads(threads)
+#pragma omp parallel shared(array, step, shift, chunk, tempArray) num_threads(threads)
     {
-        int tid, thread_index;  // tid - переменная для хранения ID текущего потока,
+        int thread_id, thread_index;  // thread_id - переменная для хранения ID текущего потока,
                                 // thread_index - определяет необходимый сдвиг для получения
                                 // парного потока (на шаге 1 = 1, на шаге 2 = 2 и т.д.)
-        tid = omp_get_thread_num();
+        thread_id = omp_get_thread_num();
 
         /* Распределение частей исходного массива по потокам и сортировка данных частей */
 
-        shift[tid] = tid * (size / threads);
-        chunk[tid] = (tid == threads - 1) ? (size / threads) +
+        shift[thread_id] = thread_id * (size / threads);
+        chunk[thread_id] = (thread_id == threads - 1) ? (size / threads) +
         (size % threads) : size / threads;
-        quickSort(arr + shift[tid], chunk[tid]);
+        quickSort(array + shift[thread_id], chunk[thread_id]);
 #pragma omp barrier  // Ожидаем, пока все потоки отсортируют свою часть массива
 
         step = 1;
@@ -160,22 +186,22 @@ int main(int argc, char *argv[]) {
             /* На каждом шаге выбираем четные и нечетные элементы из парных потоков, записываем в tempArray */
             thread_index = static_cast<int>(pow(2, step - 1));
 
-            if (tid % (thread_index * 2) == 0) {
-                selectElements(EVEN, arr + shift[tid], chunk[tid], arr + shift[tid +
-                thread_index], chunk[tid + thread_index], &tempArray[tid]);
-            } else if (tid % thread_index == 0) {
-                selectElements(ODD, arr + shift[tid], chunk[tid], arr +
-                shift[tid - thread_index], chunk[tid - thread_index], &tempArray[tid]);
+            if (thread_id % (thread_index * 2) == 0) {
+                selectElements(EVEN, array + shift[thread_id], chunk[thread_id], array + shift[thread_id +
+                thread_index], chunk[thread_id + thread_index], &tempArray[thread_id]);
+            } else if (thread_id % thread_index == 0) {
+                selectElements(ODD, array + shift[thread_id], chunk[thread_id], array +
+                shift[thread_id - thread_index], chunk[thread_id - thread_index], &tempArray[thread_id]);
             }
 #pragma omp barrier  // Ожидаем выполнения данной части всеми потоками
                      /* Производим слияние и сортировку tempArray в парных потоках */
-            if (tid % (thread_index * 2) == 0) {
-                mergeAndSort(tempArray[tid], tempArray[tid + thread_index], arr + shift[tid]);
-                chunk[tid] += chunk[tid + thread_index];
-                tempArray[tid].clear();
-                tempArray[tid].shrink_to_fit();
-                tempArray[tid + thread_index].clear();
-                tempArray[tid + thread_index].shrink_to_fit();
+            if (thread_id % (thread_index * 2) == 0) {
+                mergeAndSort(tempArray[thread_id], tempArray[thread_id + thread_index], array + shift[thread_id]);
+                chunk[thread_id] += chunk[thread_id + thread_index];
+                tempArray[thread_id].clear();
+                tempArray[thread_id].shrink_to_fit();
+                tempArray[thread_id + thread_index].clear();
+                tempArray[thread_id + thread_index].shrink_to_fit();
             }
 #pragma omp single
             {
@@ -190,7 +216,16 @@ int main(int argc, char *argv[]) {
 
     time = omp_get_wtime() - time;
     printf("OpenMP time: %f\n", time);
+    if (kLength <= 100) {
+        printArray(array, kLength);
+    }
 
-    printArray(arr, kLength);
+    if (check(copy, array, kLength))
+        std::cout << "Arrays are equal" << std::endl;
+    else
+        std::cout << "Arrays are NOT equal" << std::endl;
+
+    delete[] copy;
+    delete[] array;
     return 0;
 }
