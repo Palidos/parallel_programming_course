@@ -1,5 +1,5 @@
 // Copyright 2019 Bederdinov Daniil
-#define kLength 100
+#define kLength 50000000
 #include <omp.h>
 #include <cmath>
 #include <ctime>
@@ -74,7 +74,7 @@ void mergeAndSort(const std::vector<int> vec1, const std::vector<int> vec2, int 
         j++;
     }
 
-    i = 1;  // Первый элемент проверять не нужно
+    i = 1;  // Первый (нулевой) элемент проверять не нужно
     while (i < size1 + size2 - 1) {
         if (write_to[i] > write_to[i + 1]) {
             j = write_to[i];
@@ -135,10 +135,6 @@ int compare(const int *i, const int *j) {
 
 int main(int argc, char *argv[]) {
     int threads;
-    // if (argc != 2) {
-    //     std::cout << "Use ./main [threads]" << std::endl;
-    //     return 1;
-    // }
 
     if (argc == 2) {
         threads = atoi(argv[1]);
@@ -148,12 +144,15 @@ int main(int argc, char *argv[]) {
 
     int size = kLength;
     int *array = new int[kLength];
-    int *copy = new int[kLength];
+    int *copy1 = new int[kLength];
+    int *copy2 = new int[kLength];
     fillArray(array, kLength);
     shuffle(array, kLength);
 
-    for (int i = 0; i < kLength; i++)
-        copy[i] = array[i];
+    for (int i = 0; i < kLength; i++) {
+        copy1[i] = array[i];
+        copy2[i] = array[i];
+    }
 
     if (kLength <= 100) {
         std::cout << "Unsorted array:" << std::endl;
@@ -162,7 +161,8 @@ int main(int argc, char *argv[]) {
     }
 
     double time = omp_get_wtime();
-    int step;  // Переменная для хранения шага (step = 2^(N-1))
+    double timeSerial = 0;
+    int step;
     std::vector<int> *tempArray = new std::vector<int>[threads];
     int *shift = new int[threads];  // shift - массив сдвигов
     int *chunk = new int[threads];  // chunk - массив, содержащий размеры частей массива
@@ -215,19 +215,28 @@ int main(int argc, char *argv[]) {
     delete[] shift;
 
     time = omp_get_wtime() - time;
-    printf("OpenMP time: %f\n", time);
+    std::cout << "OpenMP time: " << time << std::endl;
     if (kLength <= 100) {
         printArray(array, kLength);
     }
 
-    qsort(copy, kLength, sizeof(int), (int (*)(const void *, const void *))compare);
+    qsort(copy1, kLength, sizeof(int), (int (*)(const void *, const void *))compare);
 
-    if (check(copy, array, kLength))
+    timeSerial = omp_get_wtime();
+    quickSort(copy2, kLength);
+    timeSerial = omp_get_wtime() - timeSerial;
+
+    std::cout << "Serial time time: " << timeSerial << std::endl;
+
+    std::cout << "Boost: " << timeSerial / time << std::endl;
+
+    if (check(copy1, array, kLength))
         std::cout << "Arrays are equal" << std::endl;
     else
         std::cout << "Arrays are NOT equal" << std::endl;
 
-    delete[] copy;
+    delete[] copy1;
+    delete[] copy2;
     delete[] array;
     return 0;
 }
