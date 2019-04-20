@@ -3,14 +3,15 @@
 #include <omp.h>
 #include <cmath>
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 
-void shuffle(int *array, int len) {
+void shuffle(int *array, int size) {
     srand((unsigned int)time(NULL));
-    int i = len, j, temp;
+    int i = size, j, temp;
     while (--i > 0) {
-        j = std::rand() % kLength;
+        j = std::rand() % size;
         temp = array[j];
         array[j] = array[i];
         array[i] = temp;
@@ -134,29 +135,30 @@ int compare(const int *i, const int *j) {
 }
 
 int main(int argc, char *argv[]) {
-    int threads;
-
+    int threads = 4;
+    int size = kLength;
     if (argc == 2) {
         threads = atoi(argv[1]);
-    } else {
-        threads = 4;
+    } else if (argc == 3) {
+        threads = atoi(argv[1]);
+        size = atoi(argv[2]);
     }
 
-    int size = kLength;
-    int *array = new int[kLength];
-    int *copy1 = new int[kLength];
-    int *copy2 = new int[kLength];
-    fillArray(array, kLength);
-    shuffle(array, kLength);
+    // int size = size;
+    int *array = new int[size];
+    int *copy1 = new int[size];
+    int *copy2 = new int[size];
+    fillArray(array, size);
+    shuffle(array, size);
 
-    for (int i = 0; i < kLength; i++) {
+    for (int i = 0; i < size; i++) {
         copy1[i] = array[i];
         copy2[i] = array[i];
     }
 
-    if (kLength <= 100) {
+    if (size <= 100) {
         std::cout << "Unsorted array:" << std::endl;
-        printArray(array, kLength);
+        printArray(array, size);
         std::cout << std::endl;
     }
 
@@ -215,22 +217,22 @@ int main(int argc, char *argv[]) {
     delete[] shift;
 
     time = omp_get_wtime() - time;
-    std::cout << "OpenMP time: " << time << std::endl;
-    if (kLength <= 100) {
-        printArray(array, kLength);
+    if (size <= 100) {
+        printArray(array, size);
     }
 
-    qsort(copy1, kLength, sizeof(int), (int (*)(const void *, const void *))compare);
+    qsort(copy1, size, sizeof(int), (int (*)(const void *, const void *))compare);
 
+    std::cout << "OpenMP time: " << time << std::endl;
     timeSerial = omp_get_wtime();
-    quickSort(copy2, kLength);
+    quickSort(copy2, size);
     timeSerial = omp_get_wtime() - timeSerial;
 
-    std::cout << "Serial time time: " << timeSerial << std::endl;
+    std::cout << "Serial time time: " << std::fixed << std::setprecision(8) << timeSerial << std::endl;
 
     std::cout << "Boost: " << timeSerial / time << std::endl;
 
-    if (check(copy1, array, kLength))
+    if (check(copy1, array, size))
         std::cout << "Arrays are equal" << std::endl;
     else
         std::cout << "Arrays are NOT equal" << std::endl;
