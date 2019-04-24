@@ -122,6 +122,9 @@ int main() {
   sorting(arr, count, rang);
 
   int b = 0;
+  for (int i = 0; i < num; i++) {
+    a[i] = 0;
+  }
   for (int i = 0; i < rang; i++) {
     for (int j = 0; j < count[i]; j++) {
       a[num + b + j] = arr[i][j];

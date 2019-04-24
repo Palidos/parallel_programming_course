@@ -1,4 +1,5 @@
 // Copyright 2019 Bederdinov Daniil
+
 #define kLength 50000000
 #include <omp.h>
 #include <cmath>
@@ -159,6 +160,7 @@ int main(int argc, char *argv[]) {
     if (size <= 100) {
         std::cout << "Unsorted array:" << std::endl;
         printArray(array, size);
+
         std::cout << std::endl;
     }
 
@@ -217,6 +219,7 @@ int main(int argc, char *argv[]) {
     delete[] shift;
 
     time = omp_get_wtime() - time;
+  
     if (size <= 100) {
         printArray(array, size);
     }
@@ -236,6 +239,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Arrays are equal" << std::endl;
     else
         std::cout << "Arrays are NOT equal" << std::endl;
+
 
     delete[] copy1;
     delete[] copy2;
