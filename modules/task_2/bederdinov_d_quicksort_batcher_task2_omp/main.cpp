@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
     delete[] shift;
 
     time = omp_get_wtime() - time;
-  
+
     if (size <= 100) {
         printArray(array, size);
     }
